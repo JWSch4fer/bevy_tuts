@@ -1,0 +1,6 @@
+To work in wsl it is best to avoid the wsl gui to windows.
+This means cross compiling with 
+
+cargo run --target x86_64-pc-windows-msvc
+
+use win.sh for convenience so that you can run the application
