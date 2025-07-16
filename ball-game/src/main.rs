@@ -10,7 +10,8 @@ use rand::random;
 const PLAYER_SPEED: f32 = 250.0;
 const PLAYER_SIZE: f32  = 64.0;
 const NUMBER_OF_ENEMIES: u16 = 4;
-
+pub const ENEMY_SPEED: f32 = 200.0;
+pub const ENEMY_SIZE: f32 = 64.0; // This is the enemy sprite size.
 fn main() {
 
     App::new().add_plugins(DefaultPlugins
@@ -37,8 +38,10 @@ fn main() {
         .add_systems(Startup, spawn_camera)
         .add_systems(Startup, spawn_player)
         .add_systems(Startup, spawn_enemies)
-        .add_systems(PreUpdate, player_movement) //remove lag in movement 
-        .add_systems(Update, (confine_player_movement,  ))
+        .add_systems(Update, (player_movement, enemy_movement)) //remove lag in movement 
+        .add_systems(Update, (confine_player_movement, confine_enemy_movement ))
+        .add_systems(Update, update_enemy_direction)
+        .add_systems(Update, enemy_hit_player)
         .run();
 }
 
@@ -71,7 +74,9 @@ pub fn spawn_player(
 }
 
 #[derive(Component)]
-pub struct Enemy {}
+pub struct Enemy {
+    pub direction: Vec2,
+}
 
 pub fn spawn_enemies(
     mut commands: Commands,
@@ -88,7 +93,7 @@ pub fn spawn_enemies(
             //Create s sprite for the enemies
             Sprite::from_image(asset_server.load("sprites/ball_red_large.png")),
             Transform::from_xyz(random_x, random_y, 0.0),
-            Enemy {},
+            Enemy {direction: Vec2::new(random::<f32>(), random::<f32>()).normalize()},
         ));
     }
 }
@@ -166,5 +171,115 @@ pub fn confine_player_movement(
         pos.y = pos.y.clamp(y_min, y_max);
 
         transform.translation = pos;
+    }
+}
+
+pub fn enemy_movement(mut enemy_query: Query<(&mut Transform, &Enemy)>, time: Res<Time>) {
+    for (mut transform, enemy) in enemy_query.iter_mut() {
+        let direction = Vec3::new(enemy.direction.x, enemy.direction.y, 0.0);
+        transform.translation += direction * ENEMY_SPEED * time.delta_secs();
+    }
+}
+
+pub fn update_enemy_direction(
+    mut commands: Commands,
+    mut enemy_query: Query<(&Transform, &mut Enemy)>,
+    window_query: Query<&Window, With<PrimaryWindow>>,
+    asset_server: Res<AssetServer>,
+) {
+    let window = window_query.single().unwrap();
+
+    let half_enemy_size = ENEMY_SIZE / 2.0; // 32.0
+    let x_min = 0.0 + half_enemy_size;
+    let x_max = window.width() - half_enemy_size;
+    let y_min = 0.0 + half_enemy_size;
+    let y_max = window.height() - half_enemy_size;
+
+    for (transform, mut enemy) in enemy_query.iter_mut() {
+        let mut direction_changed = false;
+
+        let translation = transform.translation;
+        if translation.x < x_min || translation.x > x_max {
+            enemy.direction.x *= -1.0;
+            direction_changed = true;
+        }
+        if translation.y < y_min || translation.y > y_max {
+            enemy.direction.y *= -1.0;
+            direction_changed = true;
+        }
+
+        // Play SFX
+        if direction_changed {
+            // Play Sound Effect
+            // Load two variants and choose one at random
+            let s1 = asset_server.load("audio/pluck_001.ogg");
+            let s2 = asset_server.load("audio/pluck_002.ogg");
+            let pick = if rand::random::<f32>() > 0.5 { s1 } else { s2 };
+
+            // Spawn an entity to play the sound once
+            commands.spawn((
+                AudioPlayer::new(pick),
+                PlaybackSettings::ONCE,
+            ));
+        }
+    }
+}
+
+pub fn confine_enemy_movement(
+    mut enemy_query: Query<&mut Transform, With<Enemy>>,
+    window_query: Query<&Window, With<PrimaryWindow>>,
+) {
+    let window = window_query.single().unwrap();
+
+    let half_enemy_size = ENEMY_SIZE / 2.0;
+    let x_min = 0.0 + half_enemy_size;
+    let x_max = window.width() - half_enemy_size;
+    let y_min = 0.0 + half_enemy_size;
+    let y_max = window.height() - half_enemy_size;
+
+    for mut transform in enemy_query.iter_mut() {
+        let mut translation = transform.translation;
+
+        // Bound the enemy x position
+        if translation.x < x_min {
+            translation.x = x_min;
+        } else if translation.x > x_max {
+            translation.x = x_max;
+        }
+        // Bound the enemy y position
+        if translation.y < y_min {
+            translation.y = y_min;
+        } else if translation.y > y_max {
+            translation.y = y_max;
+        }
+
+        transform.translation = translation;
+    }
+}
+
+pub fn enemy_hit_player(
+    mut commands: Commands,
+    mut player_query: Query<(Entity, &Transform), With<Player>>,
+    enemy_query: Query<&Transform, With<Enemy>>,
+    asset_server: Res<AssetServer>,
+) {
+    if let Ok((player_entity, player_transform)) = player_query.single_mut() {
+        for enemy_transform in enemy_query.iter() {
+            let distance = player_transform
+                .translation
+                .distance(enemy_transform.translation);
+            let player_radius = PLAYER_SIZE / 2.0;
+            let enemy_radius = ENEMY_SIZE / 2.0;
+            if distance < player_radius + enemy_radius {
+                println!("Enemy hit player! Game Over!");
+                let sound_effect = asset_server.load("audio/explosionCrunch_001.ogg");
+                // Spawn an entity to play the sound once
+                commands.spawn((
+                    AudioPlayer::new(sound_effect),
+                    PlaybackSettings::ONCE,
+                ));
+                commands.entity(player_entity).despawn();
+            }
+        }
     }
 }
