@@ -19,21 +19,16 @@ use bevy::prelude::*;
 
 
 // use bevy::input::ButtonInput;
-use bevy::window::{WindowPlugin, PresentMode, Window, WindowResolution, PrimaryWindow};
-// use std::num::NonZeroU32;
+use bevy::window::{WindowPlugin, PresentMode, Window, WindowResolutionsys;
+use std::num::NonZeroU32;
 // use rand::random;
 // use bevy::diagnostic::{FrameTimeDiagnosticsPlugin, DiagnosticsStore};
 // use framerate::FrameLimiterPlugin;
 
 //use framerate::{FramepacePlugin, FramepaceSettings, Limiter};
 // ensure stars aren't too close to a spawned enemy
-const NUMBER_OF_STARS: u16 = 10; // This is the enemy sprite size.
-const STAR_SIZE: f32  = 30.0;
-const SAFE_DISTANCE: f32 = ENEMY_SIZE + STAR_SIZE + 20.0;  // e.g. leave a 20px margin
-const MAX_ATTEMPTS: usize = 11;
-
 //define time between star spawns
-const STAR_SPAWN_TIME: f32 = 1.0;
+// const STAR_SPAWN_TIME: f32 = 1.0;
 
 // run every frame (or less often if you like)
 // ---------------------------------------------------------------------------

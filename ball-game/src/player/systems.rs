@@ -1,4 +1,16 @@
 use bevy::prelude::*;
+use bevy::window::{Window, PrimaryWindow};
+
+use super::components::Player;
+
+use crate::enemy::components::Enemy;
+use crate::enemy::{ENEMY_SIZE};
+
+use crate::star::components::Star;
+use crate::star::{STAR_SIZE};
+
+use crate::score::resources::Score;
+
 // ---------------------------------------------------------------------------
 // Constants
 // ---------------------------------------------------------------------------

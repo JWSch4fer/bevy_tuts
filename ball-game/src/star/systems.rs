@@ -1,3 +1,15 @@
+use bevy::prelude::*;
+use bevy::window::{ Window,  PrimaryWindow};
+use rand::random;
+
+use crate::enemy::components::Enemy;
+use crate::enemy::{SAFE_DISTANCE};
+
+use super::components::Star;
+use super::resources::*;
+use crate::star::{NUMBER_OF_STARS, MAX_ATTEMPTS};
+
+
 pub fn spawn_stars(
     mut commands: Commands,
     window_query: Query<&Window, With<PrimaryWindow>>,

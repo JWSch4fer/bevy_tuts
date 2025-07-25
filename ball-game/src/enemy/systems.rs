@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use bevy::window::{WindowPlugin, PresentMode, Window, WindowResolution, PrimaryWindow};
+use bevy::window::{ Window,  PrimaryWindow};
 use rand::random;
 
 use super::components::*;
@@ -160,20 +160,17 @@ pub fn spawn_enemies_over_time(
     enemy_spawn_timer: Res<EnemySpawnTimer>,
 ) {
     if enemy_spawn_timer.timer.finished() {
-        let window = window_query.get_single().unwrap();
+        let window = window_query.single().unwrap();
 
         let random_x = random::<f32>() * window.width();
         let random_y = random::<f32>() * window.height();
 
         commands.spawn((
-            SpriteBundle {
-                transform: Transform::from_xyz(random_x, random_y, 0.0),
-                texture: asset_server.load("sprites/ball_red_large.png"),
-                ..default()
-            },
-            Enemy {
-                direction: Vec2::new(random::<f32>(), random::<f32>()).normalize(),
-            },
+            //Create s sprite for the enemies
+            Sprite::from_image(asset_server.load("sprites/ball_red_large.png")),
+            Transform::from_xyz(random_x, random_y, 0.0),
+            Enemy {direction: Vec2::new(random::<f32>(), random::<f32>()).normalize()},
         ));
+
     }
 }
