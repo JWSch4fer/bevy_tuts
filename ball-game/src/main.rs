@@ -19,7 +19,7 @@ use bevy::prelude::*;
 
 
 // use bevy::input::ButtonInput;
-use bevy::window::{WindowPlugin, PresentMode, Window, WindowResolutionsys;
+use bevy::window::{WindowPlugin, PresentMode, Window, WindowResolution};
 use std::num::NonZeroU32;
 // use rand::random;
 // use bevy::diagnostic::{FrameTimeDiagnosticsPlugin, DiagnosticsStore};
